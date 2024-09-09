@@ -6,6 +6,15 @@ import datetime
 import time
 
 def copy_files(source_directory: str, destination_directory: str):
+    '''
+    Copy files from the source directory to the destination directory.
+    If the file already exists in the destination directory, it will only be copied if it has been modified.
+    A log file will be created in the source directory to track the backup operation.
+
+    ARGS:
+        source_directory: The directory from which files will be copied.
+        destination_directory: The directory to which files will be copied.
+    '''
     backed_up_files = 0
     start_time = time.time()
     
@@ -38,6 +47,13 @@ def copy_files(source_directory: str, destination_directory: str):
         log_file.write(f"Operation duration: {end_time - start_time:.2f} seconds\n\n")
 
 def compress_directory(directory_path: str, zip_name: str):
+    '''
+    Compress a directory into a zip file.
+
+    ARGS:
+        directory_path: The directory to be compressed.
+        zip_name: The name of the zip file to be created.
+    '''
     zip_file_path = f"{zip_name}.zip"
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(directory_path):
@@ -70,3 +86,7 @@ else:
         
         else:
             print("Backup completed successfully.")
+
+# Improvements
+# Edge Case Handling: Ensure the script handles cases like empty directories or permissions issues more gracefully (e.g., adding try-except blocks).
+# Compression Flag Validation: Could add more robust validation for the compression flag or support multiple flags for different behaviors.
