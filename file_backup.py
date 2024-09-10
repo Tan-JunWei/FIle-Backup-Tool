@@ -5,6 +5,8 @@ import zipfile
 import datetime
 import time
 
+# "C:\Users\Admin\Desktop\CS\eJPT\Pen test"
+
 def copy_files(source_directory: str, destination_directory: str):
     '''
     Copy files from the source directory to the destination directory.
@@ -46,15 +48,15 @@ def copy_files(source_directory: str, destination_directory: str):
         log_file.write(f"[{current_time}] Total files backed up: {backed_up_files}\n")
         log_file.write(f"Operation duration: {end_time - start_time:.2f} seconds\n\n")
 
-def compress_directory(directory_path: str, zip_name: str):
+def compress_directory(directory_path: str, zip_file_path: str):
     '''
     Compress a directory into a zip file.
 
     ARGS:
         directory_path: The directory to be compressed.
-        zip_name: The name of the zip file to be created.
+        zip_file_path: The name of the zip file to be created.
     '''
-    zip_file_path = f"{zip_name}.zip"
+    zip_file_path = f"{zip_file_path}.zip"
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(directory_path):
             for file in files:
@@ -62,6 +64,18 @@ def compress_directory(directory_path: str, zip_name: str):
                 relative_path = os.path.relpath(file_path, directory_path)
                 zipf.write(file_path, relative_path)
     print(f"Compressed {directory_path} into {zip_file_path}")
+
+def decompress_directory(zip_file_path: str, destination_directory: str):
+    '''
+    Decompress a zip file into a directory.
+
+    ARGS:
+        zip_file_path: The path to the zip file to be decompressed.
+        destination_directory: The directory where the zip file contents will be extracted.
+    '''
+    with zipfile.ZipFile(zip_file_path, 'r') as zipf:
+        zipf.extractall(destination_directory)
+    print(f"Decompressed {zip_file_path} into {destination_directory}")
 
 if len(sys.argv) < 3:
     print("Usage: python data_safe.py <source-directory-path> <destination-directory-path> [compress-flag]")
@@ -75,17 +89,20 @@ else:
     os.makedirs(destination_directory, exist_ok=True)
 
     if os.path.exists(source_directory):
-        copy_files(source_directory, destination_directory)
+        if len(sys.argv) == 3:
+            copy_files(source_directory, destination_directory)
+            print(f"Backed up files from {source_directory} to {destination_directory}")
 
-        # Check if the user wants to compress the destination directory
-        if len(sys.argv) == 4 and sys.argv[3].lower() == 'compress':
-            compress_directory(destination_directory, destination_directory)
-        
         elif len(sys.argv) == 4:
-            print("Invalid compress flag. Please use 'compress' to compress the destination directory.")
-        
-        else:
-            print("Backup completed successfully.")
+            if sys.argv[3].lower() == 'compress':
+                compress_directory(source_directory, destination_directory)
+            elif sys.argv[3].lower() == 'decompress':
+                decompress_directory(source_directory + ".zip", destination_directory)
+            else:
+                print("Invalid flag. Please use 'compress' or 'decompress'.")
+
+    else:
+        print("Source directory does not exist.")
 
 # Improvements
 # Edge Case Handling: Ensure the script handles cases like empty directories or permissions issues more gracefully (e.g., adding try-except blocks).
