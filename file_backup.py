@@ -85,11 +85,10 @@ else:
     source_directory = sys.argv[1]
     destination_directory = sys.argv[2]
 
-    # Create the destination directory if it doesn't exist
-    os.makedirs(destination_directory, exist_ok=True)
-
-    if os.path.exists(source_directory):
+    if os.path.exists(source_directory) or os.path.isfile(source_directory + ".zip"):
         if len(sys.argv) == 3:
+            # Create the destination directory if it doesn't exist
+            os.makedirs(destination_directory, exist_ok=True)
             copy_files(source_directory, destination_directory)
             print(f"Backed up files from {source_directory} to {destination_directory}")
 
@@ -97,12 +96,16 @@ else:
             if sys.argv[3].lower() == 'compress':
                 compress_directory(source_directory, destination_directory)
             elif sys.argv[3].lower() == 'decompress':
+                os.makedirs(destination_directory, exist_ok=True)
                 decompress_directory(source_directory + ".zip", destination_directory)
             else:
                 print("Invalid flag. Please use 'compress' or 'decompress'.")
 
-    else:
+    elif not os.path.exists(source_directory):
         print("Source directory does not exist.")
+    
+    elif not os.path.isfile(source_directory + ".zip"):
+        print("Source zip file does not exist.")
 
 # Improvements
 # Edge Case Handling: Ensure the script handles cases like empty directories or permissions issues more gracefully (e.g., adding try-except blocks).
