@@ -4,6 +4,7 @@ import shutil
 import zipfile
 import datetime
 import time
+from fuzzywuzzy import process
 
 # "C:\Users\Admin\Desktop\CS\eJPT\Pen test"
 
@@ -57,12 +58,14 @@ def compress_directory(directory_path: str, zip_file_path: str):
         zip_file_path: The name of the zip file to be created.
     '''
     zip_file_path = f"{zip_file_path}.zip"
+
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(directory_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 relative_path = os.path.relpath(file_path, directory_path)
                 zipf.write(file_path, relative_path)
+                
     print(f"Compressed {directory_path} into {zip_file_path}")
 
 def decompress_directory(zip_file_path: str, destination_directory: str):
@@ -73,6 +76,10 @@ def decompress_directory(zip_file_path: str, destination_directory: str):
         zip_file_path: The path to the zip file to be decompressed.
         destination_directory: The directory where the zip file contents will be extracted.
     '''
+    if not zipfile.is_zipfile(zip_file_path):
+        print(f"Error: {zip_file_path} is not a valid zip file.")
+        return
+    
     with zipfile.ZipFile(zip_file_path, 'r') as zipf:
         zipf.extractall(destination_directory)
     print(f"Decompressed {zip_file_path} into {destination_directory}")
@@ -95,18 +102,30 @@ else:
         elif len(sys.argv) == 4:
             if sys.argv[3].lower() == 'compress':
                 compress_directory(source_directory, destination_directory)
+
             elif sys.argv[3].lower() == 'decompress':
                 os.makedirs(destination_directory, exist_ok=True)
                 decompress_directory(source_directory + ".zip", destination_directory)
+
             else:
                 print("Invalid flag. Please use 'compress' or 'decompress'.")
 
     elif not os.path.exists(source_directory):
-        print("Source directory does not exist.")
+        print("Source directory does not exist!\n\n"
+              "Directories within the parent directory:")
+        
+        parent_directory = os.path.dirname(source_directory)
+        for dir in os.listdir(parent_directory):
+            # full path of the directory
+            full_path = os.path.join(parent_directory, dir)
+            if os.path.isdir(full_path):
+                print(f"    {full_path}")
+
+        top_match = process.extractOne(os.path.basename(source_directory), os.listdir(parent_directory), score_cutoff = 70)
+        if top_match:
+            print(f'\nDid you mean "{os.path.join(parent_directory, top_match[0])}"?')
+        else:
+            print("No similar directories found.")
     
     elif not os.path.isfile(source_directory + ".zip"):
         print("Source zip file does not exist.")
-
-# Improvements
-# Edge Case Handling: Ensure the script handles cases like empty directories or permissions issues more gracefully (e.g., adding try-except blocks).
-# Compression Flag Validation: Could add more robust validation for the compression flag or support multiple flags for different behaviors.
